@@ -15,7 +15,7 @@ Implementation differences:
 #### Desktop with Recomposition Highlighting
 
 <p style="margin-left: 24px">
-<img alt="Desktop with Highlighting" src="docs/desktop-highlighing.png">
+<img alt="Desktop with Highlighting" src="docs/desktop-highlighting.png">
 </p>
 
 #### Desktop High-Frequency Update (Top Row Only)
