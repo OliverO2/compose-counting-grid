@@ -37,13 +37,17 @@ object Configuration {
     var updateTopRowOnlyEnabled = mutableStateOf(false)
     var animationsEnabled = mutableStateOf(false)
     var topLevelRecompositionForced = mutableStateOf(false)
+    var rowLevelRecompositionForced = mutableStateOf(false)
+    var cellLevelRecompositionForced = mutableStateOf(false)
     var recomposeHighlightingEnabled = mutableStateOf(false)
 
     val elements = mapOf(
         "Pause on each step (100ms)" to pauseOnEachStep,
         "Update top row only" to updateTopRowOnlyEnabled,
         "Enable animations" to animationsEnabled,
+        "Highlight recompositions" to recomposeHighlightingEnabled,
         "Force top-level recomposition" to topLevelRecompositionForced,
-        "Highlight recompositions" to recomposeHighlightingEnabled
+        "Force row-level recomposition" to rowLevelRecompositionForced,
+        "Force cell-level recomposition" to cellLevelRecompositionForced
     )
 }

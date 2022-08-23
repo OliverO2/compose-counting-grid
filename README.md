@@ -57,10 +57,18 @@ Observations:
 * Grids with fewer cells containing text are faster (choose top-row updates only, then clear the grid).
   > Note that empty cells don't have a `Text` component.
 * Grids with more cells scrolled out of view (applies to desktop only) are faster.
-* Layout and recomposition accounts for about 10% of total performance (try forcing top-level recompositions, check the profiler's flame graph), so redrawing dominates performance. 
+* Top- or row-level layout and recomposition accounts for about 10% of total performance (try forcing top-level and/or row-level recompositions, check the profiler's flame graph). In these scenarios, redrawing dominates performance.
+* Cell-level recomposition is expensive. On desktop, it cuts the frame rate by 50% (25x25 grid) or even by 70% (50x50 grid), and makes the profiler's flame graph show significant recomposition and layout activity. Redrawing is still relevant, but less so. On the browser, the frame rate drops by 80% (25x25 grid) or more. 
 
 Conclusions:
 * Currently, it appears that the entire (window) canvas is redrawn on every frame. Once [JetBrains/skiko#53](https://github.com/JetBrains/skiko/issues/53) is fixed and only updated parts are redrawn, expect significant performance increases.
 * Drawing time increases with the number of visible layout nodes.
 * Still, Compose for Desktop seems pretty fast.
-* Compose for Web/Canvas is significantly slower than desktop (I have seen roughly a factor of 3), but it would also use just 10% for layout and recomposition. Depending on the use case, even at this early stage Web/Canvas could still be fast enough.
+* Compose for Web/Canvas is significantly slower than desktop (I have seen roughly a factor of 3), but it would also use just 10% for layout and top/row-level recomposition. Depending on the use case, even at this early stage Web/Canvas could still be fast enough.
+* It pays to avoid recompositions which affect large numbers of composables.
+
+#### Changes
+
+##### 2022-08-23
+ 
+* Added options to force row-level and cell-level recompositions. Revised conclusions regarding recomposition and layout impact.

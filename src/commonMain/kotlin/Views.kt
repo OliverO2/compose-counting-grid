@@ -18,6 +18,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,7 +68,9 @@ private fun GridScene(selectedGrid: MutableState<GridModel?>) {
     var configurationVisible by remember { mutableStateOf(false) }
     var running by remember { mutableStateOf(false) }
     var startMoment by remember { mutableStateOf<Instant?>(null) }
-    var visualizationStepCount by remember { mutableStateOf(0) }
+    val topLevelRecompositionTrigger = remember { mutableStateOf(0) }
+    val rowLevelRecompositionTrigger = remember { mutableStateOf(0) }
+    val cellLevelRecompositionTrigger = remember { mutableStateOf(0) }
 
     fun startOrStop() {
         running = !running
@@ -80,10 +83,10 @@ private fun GridScene(selectedGrid: MutableState<GridModel?>) {
                 withFpsCount {
                     grid.updateSingleCell(Configuration.updateTopRowOnlyEnabled.value)
                 }
-                if (Configuration.topLevelRecompositionForced.value) {
-                    // Force recomposition by changing state on every update.
-                    visualizationStepCount++
-                }
+                // Force recomposition by changing state on every update.
+                if (Configuration.topLevelRecompositionForced.value) topLevelRecompositionTrigger.value++
+                if (Configuration.rowLevelRecompositionForced.value) rowLevelRecompositionTrigger.value++
+                if (Configuration.cellLevelRecompositionForced.value) cellLevelRecompositionTrigger.value++
                 if (Configuration.pauseOnEachStep.value) {
                     delay(100.milliseconds)
                 }
@@ -107,20 +110,26 @@ private fun GridScene(selectedGrid: MutableState<GridModel?>) {
             }
             Info(grid, startMoment, configurationVisible)
 
-            Grid(grid, visualizationStepCount)
+            Grid(grid, topLevelRecompositionTrigger, rowLevelRecompositionTrigger, cellLevelRecompositionTrigger)
         }
     }
 }
 
 @Composable
-private fun Grid(grid: GridModel, visualizationStepCount: Int) {
-    sinkHole(visualizationStepCount)
+private fun Grid(
+    grid: GridModel,
+    topLevelRecompositionTrigger: State<Int>,
+    rowLevelRecompositionTrigger: State<Int>,
+    cellLevelRecompositionTrigger: State<Int>
+) {
+    sinkHole(topLevelRecompositionTrigger.value)
     Box(Modifier.recomposeHighlighter().border(1.dp, color = Color.LightGray)) {
         Column {
             for (row in grid.rows) {
                 Row(modifier = Modifier.recomposeHighlighter()) {
+                    sinkHole(rowLevelRecompositionTrigger.value)
                     for (cell in row.cells) {
-                        Cell(cell)
+                        Cell(cell, cellLevelRecompositionTrigger)
                     }
                 }
             }
@@ -128,16 +137,13 @@ private fun Grid(grid: GridModel, visualizationStepCount: Int) {
     }
 }
 
-fun <T> sinkHole(value: T) {
-    require(value.toString().isNotEmpty())
-}
-
 @Composable
-private fun Cell(cell: CellModel) {
+private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
     Box(
         Modifier.size(22.dp).recomposeHighlighter().border(1.dp, color = Color.LightGray),
         contentAlignment = Alignment.Center
     ) {
+        sinkHole(cellLevelRecompositionTrigger.value)
         if (Configuration.animationsEnabled.value) {
             @OptIn(ExperimentalAnimationApi::class)
             AnimatedContent(cell.content, transitionSpec = {
@@ -150,6 +156,10 @@ private fun Cell(cell: CellModel) {
             CellText(cell.content)
         }
     }
+}
+
+fun <T> sinkHole(value: T) {
+    require(value.toString().isNotEmpty())
 }
 
 @Composable
@@ -183,7 +193,7 @@ private fun Info(grid: GridModel, startMoment: Instant?, showConfiguration: Bool
 @Composable
 private fun HorizontalConfigurationSettings() {
     Column {
-        Configuration.elements.toList().chunked(3).forEach { elements ->
+        Configuration.elements.toList().chunked(4).forEach { elements ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 elements.forEach { (label, flagState) ->
                     Checkbox(flagState.value, onCheckedChange = { flagState.value = it })
