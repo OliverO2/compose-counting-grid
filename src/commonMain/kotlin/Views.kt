@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -93,6 +94,19 @@ private fun GridScene(selectedGrid: MutableState<GridModel?>) {
             }
         }
 
+        // Provisioning lots of cells with animations takes time. Changing an existing grid composition is much slower
+        // than a fresh full composition. To avoid an unresponsive UI, we hide the grid for some time after detecting
+        // a change in the animation setting. This does not help that much with large grids as the pause for them seems
+        // insufficient.
+        var animationsEnabledAfterDelay by remember { mutableStateOf(Configuration.animationsEnabled.value) }
+        val showGrid = animationsEnabledAfterDelay == Configuration.animationsEnabled.value
+        LaunchedEffect(Unit) {
+            snapshotFlow { Configuration.animationsEnabled.value }.collect {
+                delay(200.milliseconds)
+                animationsEnabledAfterDelay = it
+            }
+        }
+
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = { selectedGrid.value = null }) {
@@ -110,7 +124,9 @@ private fun GridScene(selectedGrid: MutableState<GridModel?>) {
             }
             Info(grid, startMoment, configurationVisible)
 
-            Grid(grid, topLevelRecompositionTrigger, rowLevelRecompositionTrigger, cellLevelRecompositionTrigger)
+            if (showGrid) {
+                Grid(grid, topLevelRecompositionTrigger, rowLevelRecompositionTrigger, cellLevelRecompositionTrigger)
+            }
         }
     }
 }
@@ -158,6 +174,7 @@ private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
     }
 }
 
+/** Consumes a value in a fashion the compiler (hopefully) would not identify as a no-op (and optimize away). */
 fun <T> sinkHole(value: T) {
     require(value.toString().isNotEmpty())
 }

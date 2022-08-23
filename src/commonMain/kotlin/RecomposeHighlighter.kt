@@ -36,8 +36,7 @@ import kotlin.math.min
  * size and interpolates from red to green as more recompositions occur before a timeout.
  */
 @Stable
-fun Modifier.recomposeHighlighter(alwaysEnabled: Boolean = false): Modifier =
-    if (alwaysEnabled || Configuration.recomposeHighlightingEnabled.value) this.then(recomposeModifier) else this
+fun Modifier.recomposeHighlighter(): Modifier = this.then(recomposeModifier)
 
 // Use a single instance + @Stable to ensure that recompositions can enable skipping optimizations
 // Modifier.composed will still remember unique data per call site.
@@ -63,6 +62,8 @@ private val recomposeModifier =
             onDrawWithContent {
                 // Draw actual content.
                 drawContent()
+
+                if (!Configuration.recomposeHighlightingEnabled.value) return@onDrawWithContent
 
                 // Below is to draw the highlight, if necessary. A lot of the logic is copied from
                 // Modifier.border

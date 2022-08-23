@@ -72,3 +72,4 @@ Conclusions:
 ##### 2022-08-23
  
 * Added options to force row-level and cell-level recompositions. Revised conclusions regarding recomposition and layout impact.
+* Improved UI responsiveness when toggling options for recomposition highlighting and animations.
