@@ -12,8 +12,8 @@ version = "0.0-SNAPSHOT"
 val composeCompilerVersion: String = "" // "1.2.1-dev-k1.7.10-27cf0868d10"
 
 val composeCompilerArgs: List<String> = listOf(
-    "-P",
-    "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+    // "-P",
+    // "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
 )
 
 if (composeCompilerVersion.isNotEmpty()) {
