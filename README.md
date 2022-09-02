@@ -36,7 +36,7 @@ JVM desktop application: `./gradlew run`
 
 Browser application: `./gradlew frontendJsBrowserProductionRun` (requires some patience for bundles to load)
 
-> Currently, `frontendJsBrowserDevelopmentRun` cannot be used as the development bundle does not build.
+> Currently, `frontendJsBrowserDevelopmentRun` cannot be used as the development bundle does not build due to [JetBrains/compose-jb#2255](https://github.com/JetBrains/compose-jb/issues/2255).
 
 #### What To Try
 
@@ -73,3 +73,7 @@ Conclusions:
  
 * Added options to force row-level and cell-level recompositions. Revised conclusions regarding recomposition and layout impact.
 * Improved UI responsiveness when toggling options for recomposition highlighting and animations.
+
+##### 2022-09-02
+ 
+* Redesigned Web/Canvas integration thanks to @langara
