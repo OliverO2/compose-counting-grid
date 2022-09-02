@@ -37,7 +37,7 @@ private class CanvasLayer(private val canvas: HTMLCanvasElement) {
         layer = createSkiaLayer(),
         showSoftwareKeyboard = { println("TODO showSoftwareKeyboard in JS") },
         hideSoftwareKeyboard = { println("TODO hideSoftwareKeyboard in JS") },
-        getTopLeftOffset = { Offset.Zero },
+        getTopLeftOffset = { Offset.Zero }
     )
 
     private fun reload(newSize: IntSize) {
@@ -46,7 +46,6 @@ private class CanvasLayer(private val canvas: HTMLCanvasElement) {
         canvas.height = newSize.height
         // The only way to update the underlying SkiaLayer's size seems to be via `attachTo`.
         // However, `detach` is not implemented, so this may be unstable.
-        // dispose()
         with(composeLayer) {
             layer.attachTo(canvas)
             layer.needRedraw()
@@ -57,9 +56,10 @@ private class CanvasLayer(private val canvas: HTMLCanvasElement) {
 
     fun setContent(content: @Composable () -> Unit) = composeLayer.setContent {
         LaunchedEffect(size) { reload(size) }
-        Box(Modifier
-            .wrapContentSize(unbounded = true)
-            .onSizeChanged { size = it }
+        Box(
+            Modifier
+                .wrapContentSize(unbounded = true)
+                .onSizeChanged { size = it }
         ) { content() }
     }
 
