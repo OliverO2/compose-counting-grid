@@ -55,10 +55,10 @@ Browser application: `./gradlew frontendJsBrowserProductionRun` (requires some p
 Observations:
 * Larger grids are slower.
 * Grids with fewer cells containing text are faster (choose top-row updates only, then clear the grid).
-  > Note that empty cells don't have a `Text` component.
 * Grids with more cells scrolled out of view (applies to desktop only) are faster.
 * Top- or row-level layout and recomposition accounts for about 10% of total performance (try forcing top-level and/or row-level recompositions, check the profiler's flame graph). In these scenarios, redrawing dominates performance.
-* Cell-level recomposition is expensive. On desktop, it cuts the frame rate by 50% (25x25 grid) or even by 70% (50x50 grid), and makes the profiler's flame graph show significant recomposition and layout activity. Redrawing is still relevant, but less so. On the browser, the frame rate drops by 80% (25x25 grid) or more. 
+* Cell-level recomposition is expensive. On desktop, it cuts the frame rate by 70% (25x25 grid).
+* Directly switching between grid variants with and without `AnimatedContent` animations (one per cell) is very expensive due to excessive slot table manipulations (see [detailed data](docs/SwitchingAnimationVariants.md)). This application provides an option to hide the grid temporarily when switching to speed this up, see comments in `GridScene` for details.
 
 Conclusions:
 * Currently, it appears that the entire (window) canvas is redrawn on every frame. Once [JetBrains/skiko#53](https://github.com/JetBrains/skiko/issues/53) is fixed and only updated parts are redrawn, expect significant performance increases.
@@ -77,3 +77,15 @@ Conclusions:
 ##### 2022-09-02
  
 * Redesigned Web/Canvas integration thanks to @langara
+
+##### 2022-09-12
+
+* Added instrumentation to analyze UI responsiveness when switching animations:
+    * Added console logging with timestamps.
+    * Added configuration settings:
+        * Draw cell text
+        * Track drawing
+        * Hide grid temporarily when switching animations
+* Updated observations in README.
+* Added animation switching analysis in `docs/SwitchingAnimationVariants.md`.
+* Refactored GridScene to avoid unnecessary grid recompositions when controls update. 

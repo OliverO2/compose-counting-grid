@@ -22,26 +22,38 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun MainScene() {
-    val grid = remember { mutableStateOf<GridModel?>(null) }
+    val selectedGrid = remember { mutableStateOf<GridModel?>(null) }
 
-    if (grid.value == null) {
-        GridChoiceScene(grid)
+    LaunchedEffect(selectedGrid.value) {
+        log("Grid -> ${selectedGrid.value}")
+        while (isActive) {
+            drawSeries?.tryToFinish()
+            delay(100.milliseconds)
+        }
+    }
+
+    if (selectedGrid.value == null) {
+        GridChoiceScene(selectedGrid)
     } else {
-        GridScene(grid)
+        GridScene(selectedGrid)
     }
 }
 
@@ -66,69 +78,106 @@ private fun GridChoiceScene(selectedGrid: MutableState<GridModel?>) {
 
 @Composable
 private fun GridScene(selectedGrid: MutableState<GridModel?>) {
-    var configurationVisible by remember { mutableStateOf(false) }
-    var running by remember { mutableStateOf(false) }
-    var startMoment by remember { mutableStateOf<Instant?>(null) }
     val topLevelRecompositionTrigger = remember { mutableStateOf(0) }
     val rowLevelRecompositionTrigger = remember { mutableStateOf(0) }
     val cellLevelRecompositionTrigger = remember { mutableStateOf(0) }
 
+    val grid = selectedGrid.value ?: return
+
+    // Avoiding an unresponsive UI by temporarily hiding the grid when switching the animation setting:
+    // Provisioning lots of cells with animations stresses the slot table. Direct switching from an unprovisioned
+    // grid to a provisioned one (and vice versa) is much slower than removing the first grid, wait for a slot
+    // table update, then adding the second grid.
+    var animationsEnabledAfterDelay by remember { mutableStateOf(Configuration.animationsEnabled.value) }
+    val showGrid = (
+        !Configuration.gridHidingEnabled.value ||
+            (animationsEnabledAfterDelay == Configuration.animationsEnabled.value)
+        )
+    LaunchedEffect(Unit) {
+        snapshotFlow { Configuration.animationsEnabled.value }.collect {
+            delay(200.milliseconds) // Wait for a slot table update
+            animationsEnabledAfterDelay = it
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ControlsAndInfo(
+            selectedGrid,
+            topLevelRecompositionTrigger,
+            rowLevelRecompositionTrigger,
+            cellLevelRecompositionTrigger
+        )
+
+        if (showGrid) {
+            Grid(
+                grid,
+                topLevelRecompositionTrigger,
+                rowLevelRecompositionTrigger,
+                cellLevelRecompositionTrigger
+            )
+        }
+    }
+}
+
+@Composable
+private fun ControlsAndInfo(
+    selectedGrid: MutableState<GridModel?>,
+    topLevelRecompositionTrigger: MutableState<Int>,
+    rowLevelRecompositionTrigger: MutableState<Int>,
+    cellLevelRecompositionTrigger: MutableState<Int>
+) {
+    val grid = selectedGrid.value!!
+
+    var configurationVisible by remember { mutableStateOf(false) }
+    val gridUpdateScope = rememberCoroutineScope()
+    var gridUpdateJob by remember { mutableStateOf<Job?>(null) }
+    var startMoment by remember { mutableStateOf<Instant?>(null) }
+
     fun startOrStop() {
-        running = !running
-        startMoment = if (running) Clock.System.now() else null
-    }
-
-    selectedGrid.value?.let { grid ->
-        LaunchedEffect(running) {
-            while (isActive && running) {
-                withFpsCount {
-                    grid.updateSingleCell(Configuration.updateTopRowOnlyEnabled.value)
-                }
-                // Force recomposition by changing state on every update.
-                if (Configuration.topLevelRecompositionForced.value) topLevelRecompositionTrigger.value++
-                if (Configuration.rowLevelRecompositionForced.value) rowLevelRecompositionTrigger.value++
-                if (Configuration.cellLevelRecompositionForced.value) cellLevelRecompositionTrigger.value++
-                if (Configuration.pauseOnEachStep.value) {
-                    delay(100.milliseconds)
-                }
-            }
-        }
-
-        // Provisioning lots of cells with animations takes time. Changing an existing grid composition is much slower
-        // than a fresh full composition. To avoid an unresponsive UI, we hide the grid for some time after detecting
-        // a change in the animation setting. This does not help that much with large grids as the pause for them seems
-        // insufficient.
-        var animationsEnabledAfterDelay by remember { mutableStateOf(Configuration.animationsEnabled.value) }
-        val showGrid = animationsEnabledAfterDelay == Configuration.animationsEnabled.value
-        LaunchedEffect(Unit) {
-            snapshotFlow { Configuration.animationsEnabled.value }.collect {
-                delay(200.milliseconds)
-                animationsEnabledAfterDelay = it
-            }
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = { selectedGrid.value = null }) {
-                    Text("Back")
-                }
-                Button(onClick = { startOrStop() }) {
-                    Text(if (running) "Stop" else "Start")
-                }
-                Button(onClick = { grid.clear() }) {
-                    Text("Clear")
-                }
-                Button(onClick = { configurationVisible = !configurationVisible }) {
-                    Text(if (configurationVisible) "Hide Configuration" else "Show Configuration")
+        if (gridUpdateJob == null) {
+            gridUpdateJob = gridUpdateScope.launch {
+                log("Starting")
+                startMoment = Clock.System.now()
+                try {
+                    while (isActive) {
+                        withFpsCount {
+                            grid.updateSingleCell(Configuration.updateTopRowOnlyEnabled.value)
+                        }
+                        // Force recomposition by changing state on every update.
+                        if (Configuration.topLevelRecompositionForced.value) topLevelRecompositionTrigger.value++
+                        if (Configuration.rowLevelRecompositionForced.value) rowLevelRecompositionTrigger.value++
+                        if (Configuration.cellLevelRecompositionForced.value) cellLevelRecompositionTrigger.value++
+                        if (Configuration.pauseOnEachStep.value) {
+                            delay(100.milliseconds)
+                        }
+                    }
+                } finally {
+                    log("Stopping")
                 }
             }
-            Info(grid, startMoment, configurationVisible)
-
-            if (showGrid) {
-                Grid(grid, topLevelRecompositionTrigger, rowLevelRecompositionTrigger, cellLevelRecompositionTrigger)
-            }
+        } else {
+            gridUpdateJob?.cancel()
+            gridUpdateJob = null
+            startMoment = null
         }
     }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Button(onClick = { selectedGrid.value = null }) {
+            Text("Back")
+        }
+        Button(onClick = { startOrStop() }) {
+            Text(if (startMoment == null) "Start" else "Stop")
+        }
+        Button(onClick = { grid.clear() }) {
+            Text("Clear")
+        }
+        Button(onClick = { configurationVisible = !configurationVisible }) {
+            Text(if (configurationVisible) "Hide Configuration" else "Show Configuration")
+        }
+    }
+
+    Info(grid, startMoment, configurationVisible)
 }
 
 @Composable
@@ -155,6 +204,14 @@ private fun Grid(
 
 @Composable
 private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
+    @Suppress("UnusedReceiverParameter")
+    fun Modifier.drawSupervised() = Modifier.drawWithContent {
+        drawSeries?.addCellOperation()
+        if (Configuration.cellTextDrawingEnabled.value) {
+            drawContent()
+        }
+    }
+
     Box(
         Modifier.size(22.dp).recomposeHighlighter().border(1.dp, color = Color.LightGray),
         contentAlignment = Alignment.Center
@@ -162,14 +219,18 @@ private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
         sinkHole(cellLevelRecompositionTrigger.value)
         if (Configuration.animationsEnabled.value) {
             @OptIn(ExperimentalAnimationApi::class)
-            AnimatedContent(cell.content, transitionSpec = {
-                slideInVertically { height -> height } with
-                    slideOutVertically { height -> -height }
-            }) {
+            AnimatedContent(
+                cell.content,
+                modifier = Modifier.drawSupervised(),
+                transitionSpec = {
+                    slideInVertically { height -> height } with
+                        slideOutVertically { height -> -height }
+                }
+            ) {
                 CellText(it)
             }
         } else {
-            CellText(cell.content)
+            CellText(cell.content, modifier = Modifier.drawSupervised())
         }
     }
 }
@@ -180,10 +241,8 @@ fun <T> sinkHole(value: T) {
 }
 
 @Composable
-private fun CellText(cellContent: Int) {
-    if (cellContent != 0) {
-        Text("$cellContent", style = MaterialTheme.typography.h6)
-    }
+private fun CellText(cellContent: Int, modifier: Modifier = Modifier) {
+    Text(if (cellContent != 0) "$cellContent" else "", modifier = modifier, style = MaterialTheme.typography.h6)
 }
 
 @Composable
@@ -210,11 +269,10 @@ private fun Info(grid: GridModel, startMoment: Instant?, showConfiguration: Bool
 @Composable
 private fun HorizontalConfigurationSettings() {
     Column {
-        Configuration.elements.toList().chunked(4).forEach { elements ->
+        Configuration.elements.chunked(4).forEach { elements ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                elements.forEach { (label, flagState) ->
-                    Checkbox(flagState.value, onCheckedChange = { flagState.value = it })
-                    Text(label)
+                elements.forEach {
+                    ConfigurationFlag(it)
                 }
             }
         }
@@ -224,11 +282,16 @@ private fun HorizontalConfigurationSettings() {
 @Composable
 private fun VerticalConfigurationSettings() {
     Column {
-        Configuration.elements.forEach { (label, flagState) ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(flagState.value, onCheckedChange = { flagState.value = it })
-                Text(label)
-            }
+        Configuration.elements.forEach {
+            ConfigurationFlag(it)
         }
+    }
+}
+
+@Composable
+private fun ConfigurationFlag(element: Configuration.Element) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(element.value, onCheckedChange = { element.value = it })
+        Text(element.label)
     }
 }

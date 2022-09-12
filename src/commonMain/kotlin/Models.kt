@@ -31,23 +31,3 @@ class GridModel(private val rowCount: Int, private val columnCount: Int = rowCou
 
     override fun toString(): String = "${rowCount}x$columnCount (${rowCount * columnCount} cells)"
 }
-
-object Configuration {
-    var pauseOnEachStep = mutableStateOf(false)
-    var updateTopRowOnlyEnabled = mutableStateOf(false)
-    var animationsEnabled = mutableStateOf(false)
-    var topLevelRecompositionForced = mutableStateOf(false)
-    var rowLevelRecompositionForced = mutableStateOf(false)
-    var cellLevelRecompositionForced = mutableStateOf(false)
-    var recomposeHighlightingEnabled = mutableStateOf(false)
-
-    val elements = mapOf(
-        "Pause on each step (100ms)" to pauseOnEachStep,
-        "Update top row only" to updateTopRowOnlyEnabled,
-        "Enable animations" to animationsEnabled,
-        "Highlight recompositions" to recomposeHighlightingEnabled,
-        "Force top-level recomposition" to topLevelRecompositionForced,
-        "Force row-level recomposition" to rowLevelRecompositionForced,
-        "Force cell-level recomposition" to cellLevelRecompositionForced
-    )
-}

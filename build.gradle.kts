@@ -3,6 +3,14 @@ plugins {
     id("org.jetbrains.compose")
 }
 
+buildscript {
+    dependencies {
+        classpath("org.jetbrains.kotlinx:atomicfu-gradle-plugin:_")
+    }
+}
+
+apply(plugin = "kotlinx-atomicfu")
+
 group = "com.${rootProject.name}"
 version = "0.0-SNAPSHOT"
 
@@ -77,6 +85,7 @@ kotlin {
             dependencies {
                 implementation(compose.material)
                 implementation(KotlinX.datetime)
+                implementation("org.jetbrains.kotlinx:atomicfu:_")
             }
         }
 
