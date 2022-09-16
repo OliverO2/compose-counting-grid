@@ -1,4 +1,6 @@
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 object Configuration {
     class Element(
@@ -19,9 +21,17 @@ object Configuration {
         }
     }
 
+    var gridGenerationId by mutableStateOf(0)
+
     val pauseOnEachStep = Element("Pause on each step (100ms)", false)
     val updateTopRowOnlyEnabled = Element("Update top row only", false)
-    val animationsEnabled = Element("Enable animations", false)
+    private val gridGenerationsEnabled = Element("Enable grid generations", true)
+    val animationsEnabled = Element("Enable animations", false) { element, newState ->
+        logAction(element, newState)
+        if (gridGenerationsEnabled.value) {
+            gridGenerationId++
+        }
+    }
     val recomposeHighlightingEnabled = Element("Highlight recompositions", false)
     val topLevelRecompositionForced = Element("Force top-level recomposition", false)
     val rowLevelRecompositionForced = Element("Force row-level recomposition", false)
@@ -31,7 +41,8 @@ object Configuration {
         logAction(element, newState)
         drawSeries = if (newState) DrawSeries() else null
     }
-    val gridHidingEnabled = Element("Hide grid temporarily when switching animations", true)
+    val gridHidingEnabled = Element("Hide grid temporarily when switching animations", false)
+    val boxWithConstraintsPerRowEnabled = Element("Enable BoxWithConstraints per row", true)
 
     val elements = listOf(
         pauseOnEachStep,
@@ -43,7 +54,9 @@ object Configuration {
         cellLevelRecompositionForced,
         cellTextDrawingEnabled,
         trackDrawingEnabled,
-        gridHidingEnabled
+        gridHidingEnabled,
+        gridGenerationsEnabled,
+        boxWithConstraintsPerRowEnabled
     )
 
     private fun logAction(element: Element, newState: Boolean) {

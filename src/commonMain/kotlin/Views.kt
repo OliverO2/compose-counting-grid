@@ -6,6 +6,7 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -109,12 +111,14 @@ private fun GridScene(selectedGrid: MutableState<GridModel?>) {
         )
 
         if (showGrid) {
-            Grid(
-                grid,
-                topLevelRecompositionTrigger,
-                rowLevelRecompositionTrigger,
-                cellLevelRecompositionTrigger
-            )
+            key(Configuration.gridGenerationId) {
+                Grid(
+                    grid,
+                    topLevelRecompositionTrigger,
+                    rowLevelRecompositionTrigger,
+                    cellLevelRecompositionTrigger
+                )
+            }
         }
     }
 }
@@ -191,14 +195,27 @@ private fun Grid(
     Box(Modifier.recomposeHighlighter().border(1.dp, color = Color.LightGray)) {
         Column {
             for (row in grid.rows) {
-                Row(modifier = Modifier.recomposeHighlighter()) {
-                    sinkHole(rowLevelRecompositionTrigger.value)
-                    for (cell in row.cells) {
-                        Cell(cell, cellLevelRecompositionTrigger)
+                ConditionalBoxWithConstraints {
+                    Row(modifier = Modifier.recomposeHighlighter()) {
+                        sinkHole(rowLevelRecompositionTrigger.value)
+                        for (cell in row.cells) {
+                            Cell(cell, cellLevelRecompositionTrigger)
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ConditionalBoxWithConstraints(content: @Composable () -> Unit) {
+    if (Configuration.boxWithConstraintsPerRowEnabled.value) {
+        BoxWithConstraints {
+            content()
+        }
+    } else {
+        content()
     }
 }
 

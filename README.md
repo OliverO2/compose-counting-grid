@@ -58,7 +58,7 @@ Observations:
 * Grids with more cells scrolled out of view (applies to desktop only) are faster.
 * Top- or row-level layout and recomposition accounts for about 10% of total performance (try forcing top-level and/or row-level recompositions, check the profiler's flame graph). In these scenarios, redrawing dominates performance.
 * Cell-level recomposition is expensive. On desktop, it cuts the frame rate by 70% (25x25 grid).
-* Directly switching between grid variants with and without `AnimatedContent` animations (one per cell) is very expensive due to excessive slot table manipulations (see [detailed data](docs/SwitchingAnimationVariants.md)). This application provides an option to hide the grid temporarily when switching to speed this up, see comments in `GridScene` for details.
+* Directly switching between grid variants with and without `AnimatedContent` animations (one per cell) can be very expensive due to excessive slot table manipulations. This application provides several options to work around this. See [separate information for details](docs/SwitchingAnimationVariants.md).
 
 Conclusions:
 * Currently, it appears that the entire (window) canvas is redrawn on every frame. Once [JetBrains/skiko#53](https://github.com/JetBrains/skiko/issues/53) is fixed and only updated parts are redrawn, expect significant performance increases.
@@ -89,3 +89,10 @@ Conclusions:
 * Updated observations in README.
 * Added animation switching analysis in `docs/SwitchingAnimationVariants.md`.
 * Refactored GridScene to avoid unnecessary grid recompositions when controls update. 
+
+##### 2022-09-16
+
+* Added options to speed up animation switching:
+    * Enable grid generations
+    * Enable BoxWithConstraints per row
+* Updated timing results
