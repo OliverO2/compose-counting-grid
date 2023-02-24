@@ -17,6 +17,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.native.ComposeLayer
 import androidx.compose.ui.unit.IntSize
+import kotlinx.browser.window
 import org.jetbrains.compose.web.dom.Canvas
 import org.w3c.dom.HTMLCanvasElement
 
@@ -50,7 +51,8 @@ private class CanvasLayer(private val canvas: HTMLCanvasElement) {
             layer.attachTo(canvas)
             layer.needRedraw()
             val scale = layer.contentScale
-            setSize((newSize.width / scale).toInt(), (newSize.height / scale).toInt())
+            val density = window.devicePixelRatio.toFloat()
+            setSize((newSize.width / scale * density).toInt(), (newSize.height / scale * density).toInt())
         }
     }
 
