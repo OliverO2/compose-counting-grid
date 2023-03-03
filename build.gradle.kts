@@ -65,12 +65,21 @@ kotlin {
         withJava()
     }
 
-    js("frontendJs", IR) {
+    js("frontendWeb", IR) {
+        binaries.executable()
         browser {
             useCommonJs()
-            binaries.executable()
         }
     }
+
+/*
+    // TODO: wait for Compose/Wasm
+    wasm("frontendWeb") {
+        binaries.executable()
+        browser {
+        }
+    }
+*/
 
     sourceSets {
         all {
@@ -97,7 +106,7 @@ kotlin {
         }
 
         @Suppress("UNUSED_VARIABLE")
-        val frontendJsMain by getting {
+        val frontendWebMain by getting {
             dependencies {
                 implementation(compose.web.core)
             }
@@ -105,13 +114,20 @@ kotlin {
     }
 }
 
-tasks {
-    // WORKAROUND "Execution optimizations have been disabled for task ':frontendJsProcessResources'"
-    named("frontendJsProcessResources") {
-        dependsOn("unpackSkikoWasmRuntimeFrontendJs")
-    }
-    named("frontendJsBrowserProductionRun") {
-        dependsOn("frontendJsProductionExecutableCompileSync")
+compose {
+    // If a Compose Multiplatform release compatible with the intended Kotlin compiler version is missing,
+    // see [compose-jb/VERSIONING.md](https://github.com/JetBrains/compose-jb/blob/master/VERSIONING.md#using-jetpack-compose-compiler)
+    // for instructions on how to use a Jetpack Compose compiler.
+    // NOTE: "Compose Compiler builds published by Google are not guaranteed to support k/js immediately and properly"
+    //     https://slack-chats.kotlinlang.org/t/8188420/i-just-updated-to-1-2-2-now-when-using-style-in-my-root-rend
+
+    // val forKotlinVersion = "1.8.0"
+    // val acceptKotlinVersion = "1.8.10"
+    kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:1.4.3-dev-k1.8.20-Beta-c5841510cbf")
+    // kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=$acceptKotlinVersion")
+
+    experimental {
+        web.application {}
     }
 }
 

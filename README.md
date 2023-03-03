@@ -34,9 +34,9 @@ Unless pausing is enabled, updates will be drawn as fast as possible. The deskto
 
 JVM desktop application: `./gradlew run`
 
-Browser application: `./gradlew frontendJsBrowserProductionRun` (requires some patience for bundles to load)
+Browser application: `./gradlew frontendWebBrowserProductionRun` (requires some patience for bundles to load)
 
-> Currently, `frontendJsBrowserDevelopmentRun` cannot be used as the development bundle does not build due to [JetBrains/compose-jb#2255](https://github.com/JetBrains/compose-jb/issues/2255).
+> Currently, `frontendWebBrowserDevelopmentRun` cannot be used as the development bundle does not build due to [JetBrains/compose-jb#2255](https://github.com/JetBrains/compose-jb/issues/2255).
 
 #### What To Try
 
@@ -96,3 +96,8 @@ Conclusions:
     * Enable grid generations
     * Enable BoxWithConstraints per row
 * Updated timing results
+
+##### 2023-03-03
+
+* Migrated to Kotlin 1.8.20-Beta, Compose 1.4.0-alpha01-dev958
+* Web: Re-introduce BrowserViewportWindow, resizing canvas via window event listener (less coupling with Compose Web internals) 

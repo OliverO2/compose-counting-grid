@@ -27,4 +27,11 @@ ij_kotlin_align_multiline_parameters = false
 ij_continuation_indent_size = 4
 
 # noinspection EditorConfigKeyCorrectness
-disabled_rules = filename
+ktlint_disabled_rules = filename
+
+ij_kotlin_allow_trailing_comma = false
+ij_kotlin_allow_trailing_comma_on_call_site = false
+
+[*.md]
+
+max_line_length = off
