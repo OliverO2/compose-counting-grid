@@ -59,9 +59,22 @@ kotlin {
                     }
                 )
             }
-            // applyBinaryen()
-            // The above call fails to produce a working executable. When loading the page, the browser console shows:
-            // Uncaught LinkError: WebAssembly.instantiate(): Import #78 module="skia" function="org_jetbrains_skia_BackendRenderTarget__1nMakeGL" error: imported function does not match the expected type
+
+            // applyBinaryen {
+            //     binaryenArgs = mutableListOf(
+            //         "--enable-nontrapping-float-to-int",
+            //         "--enable-gc",
+            //         "--enable-reference-types",
+            //         "--enable-exception-handling",
+            //         "--enable-bulk-memory",
+            //         "--hybrid",
+            //         "--inline-functions-with-loops",
+            //         "--traps-never-happen",
+            //         "--fast-math",
+            //         "-O1",
+            //         "-c" // Run passes while binary size decreases
+            //     )
+            // }
         }
     }
 
