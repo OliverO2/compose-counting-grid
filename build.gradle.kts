@@ -1,6 +1,13 @@
+import de.fayard.refreshVersions.core.versionFor
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.compose")
+    if (System.getProperty("application.useJs") == "true") {
+        id("org.jetbrains.compose") version "1.5.0-dev1084"
+    } else {
+        id("org.jetbrains.compose") version "1.4.0-dev-wasm08"
+    }
 }
 
 buildscript {
@@ -11,75 +18,52 @@ buildscript {
 
 apply(plugin = "kotlinx-atomicfu")
 
-group = "com.${rootProject.name}"
+group = "com.example"
 version = "0.0-SNAPSHOT"
 
-// If a Compose compiler release compatible with the intended Kotlin compiler version is missing,
-// select a pre-release compiler from https://androidx.dev/storage/compose-compiler/repository.
-// Otherwise, use an empty string.
-val composeCompilerVersion: String = "" // "1.2.1-dev-k1.7.10-27cf0868d10"
-
-val composeCompilerArgs: List<String> = listOf(
-    // "-P",
-    // "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
-)
-
-if (composeCompilerVersion.isNotEmpty()) {
-    configurations.all {
-        resolutionStrategy.dependencySubstitution {
-            substitute(module("org.jetbrains.compose.compiler:compiler"))
-                .using(module("androidx.compose.compiler:compiler:$composeCompilerVersion"))
-                .because("using the compose prerelease compiler")
-        }
-    }
-}
-
-if (composeCompilerArgs.isNotEmpty()) {
-    tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().configureEach {
-        kotlinOptions.freeCompilerArgs += composeCompilerArgs
-    }
-}
-
-val frontendJvmArgs: MutableList<String> = mutableListOf(
-    // "-Xlog:gc*=info:file=$rootDir/build/tmp/frontend-gc.log:tags,time,uptime,level"
-)
-
-val javaLanguageVersion = JavaLanguageVersion.of(11)
-
-java {
-    toolchain.languageVersion.set(javaLanguageVersion)
-}
-
-compose {
-    desktop.application.mainClass = "MainKt"
-    experimental.web.application {}
-}
+val useJs = System.getProperty("application.useJs") == "true"
 
 kotlin {
+    jvmToolchain(11)
+
     jvm("frontendJvm") {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = javaLanguageVersion.toString()
-            }
-        }
         withJava()
     }
 
-    js("frontendWeb", IR) {
-        binaries.executable()
-        browser {
-            useCommonJs()
+    if (useJs) {
+        js("frontendJs") {
+            binaries.executable()
+            browser {
+                useCommonJs()
+            }
+        }
+    } else {
+        wasm("frontendWasm") {
+            moduleName = "frontendWasm"
+            binaries.executable()
+            browser {
+                commonWebpackConfig(
+                    Action {
+                        devServer = (devServer ?: KotlinWebpackConfig.DevServer()).copy(
+                            // open = mapOf(
+                            //     "app" to mapOf(
+                            //         "name" to "google chrome",
+                            //         "arguments" to listOf("--js-flags=--experimental-wasm-gc ")
+                            //     )
+                            // ),
+                            static = (devServer?.static ?: mutableListOf()).apply {
+                                // Serve sources to debug inside browser
+                                add(project.rootDir.path)
+                            }
+                        )
+                    }
+                )
+            }
+            // applyBinaryen()
+            // The above call fails to produce a working executable. When loading the page, the browser console shows:
+            // Uncaught LinkError: WebAssembly.instantiate(): Import #78 module="skia" function="org_jetbrains_skia_BackendRenderTarget__1nMakeGL" error: imported function does not match the expected type
         }
     }
-
-/*
-    // TODO: wait for Compose/Wasm
-    wasm("frontendWeb") {
-        binaries.executable()
-        browser {
-        }
-    }
-*/
 
     sourceSets {
         all {
@@ -89,26 +73,32 @@ kotlin {
             }
         }
 
-        @Suppress("UNUSED_VARIABLE")
         val commonMain by getting {
             dependencies {
+                implementation(compose.runtime)
+                implementation(compose.foundation)
                 implementation(compose.material)
-                implementation(KotlinX.datetime)
                 implementation("org.jetbrains.kotlinx:atomicfu:_")
+                implementation(KotlinX.datetime)
             }
         }
 
-        @Suppress("UNUSED_VARIABLE")
         val frontendJvmMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
             }
         }
 
-        @Suppress("UNUSED_VARIABLE")
-        val frontendWebMain by getting {
-            dependencies {
-                implementation(compose.web.core)
+        if (useJs) {
+            val frontendJsMain by getting {
+                dependencies {
+                    implementation(compose.web.core)
+                }
+            }
+        } else {
+            val frontendWasmMain by getting {
+                dependencies {
+                }
             }
         }
     }
@@ -121,13 +111,35 @@ compose {
     // NOTE: "Compose Compiler builds published by Google are not guaranteed to support k/js immediately and properly"
     //     https://slack-chats.kotlinlang.org/t/8188420/i-just-updated-to-1-2-2-now-when-using-style-in-my-root-rend
 
-    // val forKotlinVersion = "1.8.0"
-    // val acceptKotlinVersion = "1.8.10"
-    kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:1.4.3-dev-k1.8.20-Beta-c5841510cbf")
-    // kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=$acceptKotlinVersion")
+    // val forKotlinVersion = "1.8.20"
+    // kotlinCompilerPlugin.set(dependencies.compiler.forKotlin(forKotlinVersion))
+    kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:1.4.0-dev-wasm08")
+    // kotlinCompilerPlugin.set("org.jetbrains.kotlin.experimental.compose:compiler:1.9.20-dev-5418")
+    // kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:1.4.8-dev-k1.9.0-RC-5532d15c918")
+    val acceptKotlinVersion = versionFor("version.kotlin")
+    kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=$acceptKotlinVersion")
+    // kotlinCompilerPluginArgs.add("reportsDestination=$projectDir/build/reports")
 
+    desktop.application.mainClass = "MainKt"
     experimental {
         web.application {}
+    }
+}
+
+if (!useJs) {
+    rootProject.tasks {
+        val hackNodeModuleImports by registering(Copy::class) {
+            group = "kotlin browser"
+            mustRunAfter("frontendWasmDevelopmentExecutableCompileSync")
+            mustRunAfter("frontendWasmProductionExecutableCompileSync")
+            from(buildDir.path + "/js/node_modules/@js-joda")
+            into(buildDir.path + "/js/packages/frontendWasm/kotlin/@js-joda")
+        }
+        for (dependent in listOf("frontendWasmBrowserProductionRun", "frontendWasmBrowserDevelopmentRun")) {
+            named(dependent) {
+                dependsOn(hackNodeModuleImports)
+            }
+        }
     }
 }
 
@@ -155,7 +167,6 @@ rootProject.tasks {
     val yarnLockStorageDirectory = "$rootDir/kotlin-js-store"
     val yarnLockPrimaryPath = "$yarnLockStorageDirectory/$yarnLockPrimaryName"
 
-    @Suppress("UNUSED_VARIABLE")
     val yarnShowAuditReport by registering(Exec::class) {
         group = "nodejs"
         description = "Shows an audit report for npm packages, listing known vulnerabilities."
@@ -164,7 +175,6 @@ rootProject.tasks {
         commandLine = mutableListOf(yarnExecutablePath, "audit")
     }
 
-    @Suppress("UNUSED_VARIABLE")
     val yarnShowOutdatedPackages by registering(Exec::class) {
         group = "nodejs"
         description = "Shows outdated npm packages."
@@ -174,7 +184,6 @@ rootProject.tasks {
         isIgnoreExitValue = true
     }
 
-    @Suppress("UNUSED_VARIABLE")
     val yarnLockUpdatePrimary by registering {
         group = "nodejs"
         description =
@@ -265,7 +274,6 @@ rootProject.tasks {
         // https://dev.to/naugtur/get-safe-and-remain-productive-with-can-i-ignore-scripts-2ddc
     }
 
-    @Suppress("UNUSED_VARIABLE")
     val analyzeNpmSupplyChain by registering(Exec::class) {
         group = "nodejs"
         description = "Analyses the npm package supply chain, hinting on possible security risks."

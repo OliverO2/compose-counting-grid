@@ -32,11 +32,11 @@ Unless pausing is enabled, updates will be drawn as fast as possible. The deskto
 
 #### How To Build And Run
 
-JVM desktop application: `./gradlew run`
+JVM desktop application: `./gradlew clean runRelease`
 
-Browser application: `./gradlew frontendWebBrowserProductionRun` (requires some patience for bundles to load)
+Js browser application: `./gradlew clean -Dapplication.useJs=true frontendJsBrowserProductionRun` (requires some patience for bundles to load)
 
-> Currently, `frontendWebBrowserDevelopmentRun` cannot be used as the development bundle does not build due to [JetBrains/compose-jb#2255](https://github.com/JetBrains/compose-jb/issues/2255).
+Wasm browser application: `./gradlew clean frontendWasmBrowserProductionRun` (requires some patience for bundles to load)
 
 #### What To Try
 
@@ -44,39 +44,29 @@ Browser application: `./gradlew frontendWebBrowserProductionRun` (requires some 
 * Resize the window so that only the top row of counters is visible.
 * Highlight re-compositions.
 * Toggle "Force top-level recomposition".
+* Browser: Compare Js and Wasm speed and download file size differences (Skiko size will not change).
 
 #### Remarks
 
 * This application does not simulate any real-world scenario as it uses a very simple layout with fixed-size cells.
-* Compose for Web on Canvas is at an experimental stage. This application uses funky tricks to fit the canvas to its content size.
-
-#### Findings
-
-Observations:
-* Larger grids are slower.
-* Grids with fewer cells containing text are faster (choose top-row updates only, then clear the grid).
-* Grids with more cells scrolled out of view (applies to desktop only) are faster.
-* Top- or row-level layout and recomposition accounts for about 10% of total performance (try forcing top-level and/or row-level recompositions, check the profiler's flame graph). In these scenarios, redrawing dominates performance.
-* Cell-level recomposition is expensive. On desktop, it cuts the frame rate by 70% (25x25 grid).
-* Directly switching between grid variants with and without `AnimatedContent` animations (one per cell) can be very expensive due to excessive slot table manipulations. This application provides several options to work around this. See [separate information for details](docs/SwitchingAnimationVariants.md).
-
-Conclusions:
-* Currently, it appears that the entire (window) canvas is redrawn on every frame. Once [JetBrains/skiko#53](https://github.com/JetBrains/skiko/issues/53) is fixed and only updated parts are redrawn, expect significant performance increases.
-* Drawing time increases with the number of visible layout nodes.
-* Still, Compose for Desktop seems pretty fast.
-* Compose for Web/Canvas is significantly slower than desktop (I have seen roughly a factor of 3), but it would also use just 10% for layout and top/row-level recomposition. Depending on the use case, even at this early stage Web/Canvas could still be fast enough.
-* It pays to avoid recompositions which affect large numbers of composables.
+* Compose for Web on Js/Canvas is at an experimental stage. This application uses funky tricks to fit the canvas to its content size (which no longer work with Kotlin 1.9.0).
+* Webassembly is also experimental. It currently requires carefully selected libraries, a specific Compose plugin and some hack to bridge an implementation gap regarding Node module imports.
 
 #### Changes
 
-##### 2022-08-23
- 
-* Added options to force row-level and cell-level recompositions. Revised conclusions regarding recomposition and layout impact.
-* Improved UI responsiveness when toggling options for recomposition highlighting and animations.
+##### 2023-07-11
 
-##### 2022-09-02
- 
-* Redesigned Web/Canvas integration thanks to @langara
+* Migrated to Kotlin 1.9.0
+* Web/Wasm: Added a full Webassembly target with Wasm-compiled frontend code (in addition to Skiko/Skia, which were always Wasm-compilations).
+* Web/Js: With Kotlin 1.9.0, BrowserViewportWindow no longer reacts to resizing as the Kotlin/Js target now refuses access to non-public symbols.
+* Removed non-current documentation.
+
+##### 2022-09-16
+
+* Added options to speed up animation switching:
+    * Enable grid generations
+    * Enable BoxWithConstraints per row
+* Updated timing results
 
 ##### 2022-09-12
 
@@ -88,16 +78,13 @@ Conclusions:
         * Hide grid temporarily when switching animations
 * Updated observations in README.
 * Added animation switching analysis in `docs/SwitchingAnimationVariants.md`.
-* Refactored GridScene to avoid unnecessary grid recompositions when controls update. 
+* Refactored GridScene to avoid unnecessary grid recompositions when controls update.
 
-##### 2022-09-16
+##### 2022-09-02
 
-* Added options to speed up animation switching:
-    * Enable grid generations
-    * Enable BoxWithConstraints per row
-* Updated timing results
+* Redesigned Web/Canvas integration thanks to @langara
 
-##### 2023-03-03
-
-* Migrated to Kotlin 1.8.20-Beta, Compose 1.4.0-alpha01-dev958
-* Web: Re-introduce BrowserViewportWindow, resizing canvas via window event listener (less coupling with Compose Web internals) 
+##### 2022-08-23
+ 
+* Added options to force row-level and cell-level recompositions. Revised conclusions regarding recomposition and layout impact.
+* Improved UI responsiveness when toggling options for recomposition highlighting and animations.
