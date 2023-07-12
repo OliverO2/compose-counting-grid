@@ -49,7 +49,7 @@ Wasm browser application: `./gradlew clean frontendWasmBrowserProductionRun` (re
 #### Remarks
 
 * This application does not simulate any real-world scenario as it uses a very simple layout with fixed-size cells.
-* Compose for Web on Js/Canvas is at an experimental stage. This application uses funky tricks to fit the canvas to its content size (which no longer work with Kotlin 1.9.0).
+* Compose for Web on Js/Canvas is at an experimental stage, and now deprecated, favoring the upcoming WebAssembly target. This application uses funky tricks to fit the canvas to its content size.
 * WebAssembly is also experimental. It currently requires carefully selected libraries, a specific Compose plugin and some hack to bridge an implementation gap regarding Node module imports.
 
 #### Changes
