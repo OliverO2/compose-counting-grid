@@ -50,14 +50,20 @@ Wasm browser application: `./gradlew clean frontendWasmBrowserProductionRun` (re
 
 * This application does not simulate any real-world scenario as it uses a very simple layout with fixed-size cells.
 * Compose for Web on Js/Canvas is at an experimental stage. This application uses funky tricks to fit the canvas to its content size (which no longer work with Kotlin 1.9.0).
-* Webassembly is also experimental. It currently requires carefully selected libraries, a specific Compose plugin and some hack to bridge an implementation gap regarding Node module imports.
+* WebAssembly is also experimental. It currently requires carefully selected libraries, a specific Compose plugin and some hack to bridge an implementation gap regarding Node module imports.
 
 #### Changes
+
+##### 2023-07-12
+
+* Web/Js: `BrowserViewportWindow` no longer crashes when resizing the window on Kotlin 1.9.0.
+* Web/Wasm: Enabled optimization with binaryen, shrinking the (compressed) transfer size of `frontendWasm.wasm` from 1.2 MB to 612 kB, both in addition to Skiko's transfer size of 3.2 MB. Total transfer size with optimized Wasm is now 4.0 MB (with Web/Js at 3.8 MB). 
+* Web/Wasm: Fixed node module import hack.
 
 ##### 2023-07-11
 
 * Migrated to Kotlin 1.9.0
-* Web/Wasm: Added a full Webassembly target with Wasm-compiled frontend code (in addition to Skiko/Skia, which were always Wasm-compilations).
+* Web/Wasm: Added a full WebAssembly target with Wasm-compiled frontend code (in addition to Skiko/Skia, which were always Wasm-compilations).
 * Web/Js: With Kotlin 1.9.0, BrowserViewportWindow no longer reacts to resizing as the Kotlin/Js target now refuses access to non-public symbols.
 * Removed non-current documentation.
 

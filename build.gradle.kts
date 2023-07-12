@@ -60,21 +60,21 @@ kotlin {
                 )
             }
 
-            // applyBinaryen {
-            //     binaryenArgs = mutableListOf(
-            //         "--enable-nontrapping-float-to-int",
-            //         "--enable-gc",
-            //         "--enable-reference-types",
-            //         "--enable-exception-handling",
-            //         "--enable-bulk-memory",
-            //         "--hybrid",
-            //         "--inline-functions-with-loops",
-            //         "--traps-never-happen",
-            //         "--fast-math",
-            //         "-O1",
-            //         "-c" // Run passes while binary size decreases
-            //     )
-            // }
+            applyBinaryen {
+                binaryenArgs = mutableListOf(
+                    "--enable-nontrapping-float-to-int",
+                    "--enable-gc",
+                    "--enable-reference-types",
+                    "--enable-exception-handling",
+                    "--enable-bulk-memory",
+                    "--hybrid",
+                    "--inline-functions-with-loops",
+                    "--traps-never-happen",
+                    "--fast-math",
+                    "-O1",
+                    "-c" // Run passes while binary size decreases
+                )
+            }
         }
     }
 
@@ -143,8 +143,7 @@ if (!useJs) {
     rootProject.tasks {
         val hackNodeModuleImports by registering(Copy::class) {
             group = "kotlin browser"
-            mustRunAfter("frontendWasmDevelopmentExecutableCompileSync")
-            mustRunAfter("frontendWasmProductionExecutableCompileSync")
+            mustRunAfter("kotlinNpmInstall")
             from(buildDir.path + "/js/node_modules/@js-joda")
             into(buildDir.path + "/js/packages/frontendWasm/kotlin/@js-joda")
         }
