@@ -54,6 +54,11 @@ Wasm browser application: `./gradlew clean frontendWasmBrowserProductionRun` (re
 
 #### Changes
 
+##### 2023-07-30
+
+* Web/Js: `BrowserViewportWindow` avoids adding multiple event listeners whenever the window is resized.
+* Web/Js: Use Compose Multiplatform 1.5.0-beta01.
+
 ##### 2023-07-12
 
 * Web/Js: `BrowserViewportWindow` no longer crashes when resizing the window on Kotlin 1.9.0.

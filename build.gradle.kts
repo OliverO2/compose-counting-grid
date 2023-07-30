@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 plugins {
     kotlin("multiplatform")
     if (System.getProperty("application.useJs") == "true") {
-        id("org.jetbrains.compose") version "1.5.0-dev1084"
+        id("org.jetbrains.compose") version "1.5.0-beta01"
     } else {
         id("org.jetbrains.compose") version "1.4.0-dev-wasm08"
     }
@@ -124,13 +124,11 @@ compose {
     // NOTE: "Compose Compiler builds published by Google are not guaranteed to support k/js immediately and properly"
     //     https://slack-chats.kotlinlang.org/t/8188420/i-just-updated-to-1-2-2-now-when-using-style-in-my-root-rend
 
-    // val forKotlinVersion = "1.8.20"
-    // kotlinCompilerPlugin.set(dependencies.compiler.forKotlin(forKotlinVersion))
-    kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:1.4.0-dev-wasm08")
-    // kotlinCompilerPlugin.set("org.jetbrains.kotlin.experimental.compose:compiler:1.9.20-dev-5418")
-    // kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:1.4.8-dev-k1.9.0-RC-5532d15c918")
-    val acceptKotlinVersion = versionFor("version.kotlin")
-    kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=$acceptKotlinVersion")
+    if (!useJs) {
+        kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:1.4.0-dev-wasm08")
+        val acceptKotlinVersion = versionFor("version.kotlin")
+        kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=$acceptKotlinVersion")
+    }
     // kotlinCompilerPluginArgs.add("reportsDestination=$projectDir/build/reports")
 
     desktop.application.mainClass = "MainKt"

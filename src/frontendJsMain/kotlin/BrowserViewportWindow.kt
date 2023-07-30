@@ -22,7 +22,6 @@
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.createSkiaLayer
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.native.ComposeLayer
 import androidx.compose.ui.platform.JSTextInputService
 import androidx.compose.ui.unit.Density
@@ -62,18 +61,30 @@ private class AutoSizingComposeWindow(title: String) {
     private val layer = ComposeLayer(
         layer = createSkiaLayer(),
         platform = platform,
-        getTopLeftOffset = { Offset.Zero },
         input = jsTextInputService.input
     )
 
-    // TODO: generalize me.
-    val canvas = document.getElementById(CANVAS_ELEMENT_ID) as HTMLCanvasElement
+    var canvas = document.getElementById(CANVAS_ELEMENT_ID) as HTMLCanvasElement
 
     private val htmlHeadElement = document.head!!
 
-    private fun HTMLCanvasElement.fillViewportSize() {
-        setAttribute("width", "${window.innerWidth}")
-        setAttribute("height", "${window.innerHeight}")
+    private fun resizeCanvasToViewport() {
+        val scale = layer.layer.contentScale
+        val density = window.devicePixelRatio.toFloat()
+
+        // Cloning the canvas node to work around multiple event listeners being applied by
+        // SkiaLayer.attachTo() on every resize event.
+        // See https://github.com/JetBrains/compose-multiplatform-core/pull/692/files
+        val oldCanvas = canvas
+        canvas = oldCanvas.cloneNode(true) as HTMLCanvasElement
+        oldCanvas.parentElement!!.replaceChild(canvas, oldCanvas)
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+        canvas.tabIndex = 0
+        layer.layer.attachTo(canvas)
+        layer.layer.needRedraw()
+        layer.setSize((canvas.width / scale * density).toInt(), (canvas.height / scale * density).toInt())
     }
 
     init {
@@ -98,21 +109,9 @@ private class AutoSizingComposeWindow(title: String) {
             }
         )
 
-        canvas.fillViewportSize()
+        resizeCanvasToViewport()
 
-        layer.layer.attachTo(canvas)
-        canvas.setAttribute("tabindex", "0")
-
-        layer.setSize(canvas.width, canvas.height)
-
-        window.addEventListener("resize", {
-            val scale = layer.layer.contentScale
-            val density = window.devicePixelRatio.toFloat()
-            canvas.fillViewportSize()
-            layer.layer.attachTo(canvas)
-            layer.layer.needRedraw()
-            layer.setSize((canvas.width / scale * density).toInt(), (canvas.height / scale * density).toInt())
-        })
+        window.addEventListener("resize", { resizeCanvasToViewport() })
 
         val htmlTitleElement = (
             htmlHeadElement.getElementsByTagName("title").item(0)
