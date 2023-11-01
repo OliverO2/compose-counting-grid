@@ -54,6 +54,12 @@ Wasm browser application: `./gradlew clean frontendWasmBrowserProductionRun` (re
 
 #### Changes
 
+##### 2023-11-01
+
+* Migrated to Kotlin 1.9.20, Compose 1.5.10
+* Wasm not ready yet, waiting for [KT-62872 – K/Wasm: (re)publish compose-mp for wasm-js with 1.9.20-RC2 (or newer if available)](https://youtrack.jetbrains.com/issue/KT-62872)
+* Replaced `BrowserViewportWindow` with `CanvasBasedWindow` (now a fully featured replacement for Js and Wasm-Js, part of Compose Multiplatform since 1.5.0-beta02)
+
 ##### 2023-07-30
 
 * Web/Js: `BrowserViewportWindow` avoids adding multiple event listeners whenever the window is resized.

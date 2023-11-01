@@ -1,8 +1,7 @@
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.with
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -235,12 +234,11 @@ private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
     ) {
         sinkHole(cellLevelRecompositionTrigger.value)
         if (Configuration.animationsEnabled.value) {
-            @OptIn(ExperimentalAnimationApi::class)
             AnimatedContent(
                 cell.content,
                 modifier = Modifier.drawSupervised(),
                 transitionSpec = {
-                    slideInVertically { height -> height } with
+                    slideInVertically { height -> height } togetherWith
                         slideOutVertically { height -> -height }
                 }
             ) {

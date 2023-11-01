@@ -4,9 +4,9 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 plugins {
     kotlin("multiplatform")
     if (System.getProperty("application.useJs") == "true") {
-        id("org.jetbrains.compose") version "1.5.0-beta01"
+        id("org.jetbrains.compose") version "1.5.10"
     } else {
-        id("org.jetbrains.compose") version "1.4.0-dev-wasm08"
+        id("org.jetbrains.compose") version "1.5.10-dev-wasm01"
     }
 }
 
@@ -38,7 +38,7 @@ kotlin {
             }
         }
     } else {
-        wasm("frontendWasm") {
+        wasmJs("frontendWasm") {
             moduleName = "frontendWasm"
             binaries.executable()
             browser {
@@ -51,6 +51,7 @@ kotlin {
                             //         "arguments" to listOf("--js-flags=--experimental-wasm-gc ")
                             //     )
                             // ),
+                            port = 8081,
                             static = (devServer?.static ?: mutableListOf()).apply {
                                 // Serve sources to debug inside browser
                                 add(project.rootDir.path)
@@ -108,11 +109,6 @@ kotlin {
                     implementation(compose.web.core)
                 }
             }
-        } else {
-            val frontendWasmMain by getting {
-                dependencies {
-                }
-            }
         }
     }
 }
@@ -125,8 +121,9 @@ compose {
     //     https://slack-chats.kotlinlang.org/t/8188420/i-just-updated-to-1-2-2-now-when-using-style-in-my-root-rend
 
     if (!useJs) {
-        kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:1.4.0-dev-wasm08")
+        kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:1.5.2.1-rc01")
         val acceptKotlinVersion = versionFor("version.kotlin")
+        // kotlinCompilerPlugin.set(dependencies.compiler.forKotlin(acceptKotlinVersion))
         kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=$acceptKotlinVersion")
     }
     // kotlinCompilerPluginArgs.add("reportsDestination=$projectDir/build/reports")

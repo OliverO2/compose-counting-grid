@@ -1,9 +1,11 @@
-
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.window.CanvasBasedWindow
 import org.jetbrains.skiko.wasm.onWasmReady
 
 fun main() {
     onWasmReady {
-        BrowserViewportWindow("Compose Counting Grid") {
+        @OptIn(ExperimentalComposeUiApi::class)
+        CanvasBasedWindow("Compose Counting Grid", canvasElementId = "ComposeTarget") {
             MainScene()
         }
     }
