@@ -20,7 +20,7 @@ Implementation differences:
 
 #### Desktop High-Frequency Update (Top Row Only)
 
-* This animated GIF ⚠️ **not suitable for people with photosensitive epilepsy** ⚠️ demonstrates increasing FPS as the window shrinks: [Animation with high-frequency updates](docs/top-row-only-updates-resizing.gif).
+* This animated GIF ⚠️ **not suitable for persons with photosensitive epilepsy** ⚠️ demonstrates increasing FPS as the window shrinks: [Animation with high-frequency updates](docs/top-row-only-updates-resizing.gif).
 
     > This effect appears with the desktop application, not the web application.
 
@@ -34,9 +34,9 @@ Unless pausing is enabled, updates will be drawn as fast as possible. The deskto
 
 JVM desktop application: `./gradlew clean runRelease`
 
-Js browser application: `./gradlew clean -Dapplication.useJs=true frontendJsBrowserProductionRun` (requires some patience for bundles to load)
+Js browser application: `./gradlew clean -Dapplication.useJs=true jsBrowserProductionRun` (requires some patience for bundles to load)
 
-Wasm browser application: `./gradlew clean frontendWasmBrowserProductionRun` (requires some patience for bundles to load)
+Wasm browser application: `./gradlew clean wasmJsBrowserProductionRun` (requires some patience for bundles to load)
 
 #### What To Try
 
@@ -53,6 +53,12 @@ Wasm browser application: `./gradlew clean frontendWasmBrowserProductionRun` (re
 * WebAssembly is also experimental. It currently requires carefully selected libraries, a specific Compose plugin and some hack to bridge an implementation gap regarding Node module imports.
 
 #### Changes
+
+##### 2023-11-06
+
+* Added Wasm support via Compose 1.5.10-dev-wasm02.
+* Web/Wasm FPS now at about 200% of Web/Js FPS (use larger grids and/or animations to check, otherwise you'll hit the display frame rate ceiling).
+* Web/Wasm compressed transfer size for `app.wasm` (formerly `frontendWasm.wasm`) now at 623 kB. Total transfer size still at 4.0 MB (Web/Wasm) vs. 3.8 MB (Web/Js) with `skiko.wasm` being the largest contributor as before (3.2 MB).
 
 ##### 2023-11-01
 

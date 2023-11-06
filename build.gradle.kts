@@ -1,4 +1,3 @@
-import de.fayard.refreshVersions.core.versionFor
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -6,7 +5,7 @@ plugins {
     if (System.getProperty("application.useJs") == "true") {
         id("org.jetbrains.compose") version "1.5.10"
     } else {
-        id("org.jetbrains.compose") version "1.5.10-dev-wasm01"
+        id("org.jetbrains.compose") version "1.5.10-dev-wasm02"
     }
 }
 
@@ -26,31 +25,32 @@ val useJs = System.getProperty("application.useJs") == "true"
 kotlin {
     jvmToolchain(11)
 
-    jvm("frontendJvm") {
+    jvm {
         withJava()
     }
 
     if (useJs) {
-        js("frontendJs") {
+        js {
+            moduleName = "app"
             binaries.executable()
             browser {
                 useCommonJs()
+                commonWebpackConfig(
+                    Action {
+                        outputFileName = "$moduleName.js"
+                    }
+                )
             }
         }
     } else {
-        wasmJs("frontendWasm") {
-            moduleName = "frontendWasm"
+        wasmJs {
+            moduleName = "app"
             binaries.executable()
             browser {
                 commonWebpackConfig(
                     Action {
+                        outputFileName = "$moduleName.js"
                         devServer = (devServer ?: KotlinWebpackConfig.DevServer()).copy(
-                            // open = mapOf(
-                            //     "app" to mapOf(
-                            //         "name" to "google chrome",
-                            //         "arguments" to listOf("--js-flags=--experimental-wasm-gc ")
-                            //     )
-                            // ),
                             port = 8081,
                             static = (devServer?.static ?: mutableListOf()).apply {
                                 // Serve sources to debug inside browser
@@ -68,7 +68,6 @@ kotlin {
                     "--enable-reference-types",
                     "--enable-exception-handling",
                     "--enable-bulk-memory",
-                    "--hybrid",
                     "--inline-functions-with-loops",
                     "--traps-never-happen",
                     "--fast-math",
@@ -97,14 +96,14 @@ kotlin {
             }
         }
 
-        val frontendJvmMain by getting {
+        val jvmMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
             }
         }
 
         if (useJs) {
-            val frontendJsMain by getting {
+            val jsMain by getting {
                 dependencies {
                     implementation(compose.web.core)
                 }
@@ -114,20 +113,6 @@ kotlin {
 }
 
 compose {
-    // If a Compose Multiplatform release compatible with the intended Kotlin compiler version is missing,
-    // see [compose-jb/VERSIONING.md](https://github.com/JetBrains/compose-jb/blob/master/VERSIONING.md#using-jetpack-compose-compiler)
-    // for instructions on how to use a Jetpack Compose compiler.
-    // NOTE: "Compose Compiler builds published by Google are not guaranteed to support k/js immediately and properly"
-    //     https://slack-chats.kotlinlang.org/t/8188420/i-just-updated-to-1-2-2-now-when-using-style-in-my-root-rend
-
-    if (!useJs) {
-        kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:1.5.2.1-rc01")
-        val acceptKotlinVersion = versionFor("version.kotlin")
-        // kotlinCompilerPlugin.set(dependencies.compiler.forKotlin(acceptKotlinVersion))
-        kotlinCompilerPluginArgs.add("suppressKotlinVersionCompatibilityCheck=$acceptKotlinVersion")
-    }
-    // kotlinCompilerPluginArgs.add("reportsDestination=$projectDir/build/reports")
-
     desktop.application.mainClass = "MainKt"
     experimental {
         web.application {}
@@ -140,9 +125,9 @@ if (!useJs) {
             group = "kotlin browser"
             mustRunAfter("kotlinNpmInstall")
             from(buildDir.path + "/js/node_modules/@js-joda")
-            into(buildDir.path + "/js/packages/frontendWasm/kotlin/@js-joda")
+            into(buildDir.path + "/js/packages/app/kotlin/@js-joda")
         }
-        for (dependent in listOf("frontendWasmBrowserProductionRun", "frontendWasmBrowserDevelopmentRun")) {
+        for (dependent in listOf("wasmJsBrowserProductionRun", "wasmJsBrowserDevelopmentRun")) {
             named(dependent) {
                 dependsOn(hackNodeModuleImports)
             }
