@@ -51,10 +51,14 @@ fun MainScene() {
         }
     }
 
-    if (selectedGrid.value == null) {
-        GridChoiceScene(selectedGrid)
-    } else {
-        GridScene(selectedGrid)
+    MaterialTheme {
+        ScrollView {
+            if (selectedGrid.value == null) {
+                GridChoiceScene(selectedGrid)
+            } else {
+                GridScene(selectedGrid)
+            }
+        }
     }
 }
 

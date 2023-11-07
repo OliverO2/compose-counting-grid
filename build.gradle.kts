@@ -21,6 +21,7 @@ group = "com.example"
 version = "0.0-SNAPSHOT"
 
 val useJs = System.getProperty("application.useJs") == "true"
+val optimizeAggressively = System.getProperty("application.optimize") == "true"
 
 kotlin {
     jvmToolchain(11)
@@ -70,10 +71,26 @@ kotlin {
                     "--enable-bulk-memory",
                     "--inline-functions-with-loops",
                     "--traps-never-happen",
-                    "--fast-math",
-                    "-O1",
-                    "-c" // Run passes while binary size decreases
+                    "--fast-math"
                 )
+
+                binaryenArgs += if (optimizeAggressively) {
+                    listOf(
+                        "--closed-world",
+                        // "--metrics",
+                        "-O3",
+                        "--gufa", // "--metrics",
+                        "-O3",
+                        "--gufa", // "--metrics",
+                        "-O3",
+                        "--gufa" // "--metrics"
+                    )
+                } else {
+                    listOf(
+                        "-O1",
+                        "-c" // Run passes while binary size decreases
+                    )
+                }
             }
         }
     }

@@ -3,8 +3,10 @@
     <words>
       <w>composables</w>
       <w>distrib</w>
+      <w>gufa</w>
       <w>kotlinx</w>
       <w>lerp</w>
+      <w>nontrapping</w>
       <w>pacman</w>
       <w>skiko</w>
       <w>websockets</w>

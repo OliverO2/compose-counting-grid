@@ -2,10 +2,6 @@
 
 A simple application to check **Compose for Desktop** and **Compose for Web (Canvas)** drawing speeds when drawing grids (or tables) with larger numbers of cells.
 
-Implementation differences:
-* The desktop application uses a window-sized canvas. Compose scrollbars appear if necessary.
-* The web application uses a content-sized (window) canvas. The browser's scrollbars appear if necessary.
-
 #### Initial Scene
 
 <p style="margin-left: 24px">
@@ -38,6 +34,8 @@ Js browser application: `./gradlew clean -Dapplication.useJs=true jsBrowserProdu
 
 Wasm browser application: `./gradlew clean wasmJsBrowserProductionRun` (requires some patience for bundles to load)
 
+* If you'd like Wasm even faster, try aggressive optimization: `./gradlew clean -Dapplication.optimize=true wasmJsBrowserProductionRun`
+
 #### What To Try
 
 * Try everything without animations first.
@@ -53,6 +51,11 @@ Wasm browser application: `./gradlew clean wasmJsBrowserProductionRun` (requires
 * Compose for Web on WebAssembly is experimental, but most probably the future. It currently requires carefully selected libraries, a specific Compose plugin and some hack to bridge an implementation gap regarding Node module imports.
 
 #### Changes
+
+##### 2023-11-07
+
+* Unified UI across platforms, using Compose scrollbars and `MaterialTheme` everywhere.
+* Added aggressive Wasm optimization via `-Dapplication.optimize=true`, increasing speed by another 20%, reducing `app.wasm` size by 24% (to 473 KB). In certain scenarios (50x50 grid, default configuration), K/Wasm on Chrome now seems to be at 84% of desktop/JVM performance (even if the optimization is applied to app+Compose only, not to Skiko).
 
 ##### 2023-11-06
 
