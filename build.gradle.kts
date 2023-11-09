@@ -36,11 +36,9 @@ kotlin {
             binaries.executable()
             browser {
                 useCommonJs()
-                commonWebpackConfig(
-                    Action {
-                        outputFileName = "$moduleName.js"
-                    }
-                )
+                commonWebpackConfig {
+                    outputFileName = "$moduleName.js"
+                }
             }
         }
     } else {
@@ -48,18 +46,16 @@ kotlin {
             moduleName = "app"
             binaries.executable()
             browser {
-                commonWebpackConfig(
-                    Action {
-                        outputFileName = "$moduleName.js"
-                        devServer = (devServer ?: KotlinWebpackConfig.DevServer()).copy(
-                            port = 8081,
-                            static = (devServer?.static ?: mutableListOf()).apply {
-                                // Serve sources to debug inside browser
-                                add(project.rootDir.path)
-                            }
-                        )
-                    }
-                )
+                commonWebpackConfig {
+                    outputFileName = "$moduleName.js"
+                    devServer = (devServer ?: KotlinWebpackConfig.DevServer()).copy(
+                        port = 8081,
+                        static = (devServer?.static ?: mutableListOf()).apply {
+                            // Serve sources to debug inside browser
+                            add(project.rootDir.path)
+                        }
+                    )
+                }
             }
 
             applyBinaryen {
@@ -97,7 +93,8 @@ kotlin {
 
     sourceSets {
         all {
-            languageSettings.apply {
+            languageSettings {
+                languageVersion = "2.0"
                 progressiveMode = true
                 optIn("kotlin.RequiresOptIn")
             }

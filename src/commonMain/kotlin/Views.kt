@@ -62,7 +62,7 @@ fun MainScene() {
     }
 }
 
-private val grids = listOf(25, 50, 100, 200, 400).map { GridModel(it) }
+private val grids = listOf(25, 50, 75, 100, 200, 400).map { GridModel(it) }
 
 @Composable
 private fun GridChoiceScene(selectedGrid: MutableState<GridModel?>) {
@@ -224,8 +224,7 @@ private fun ConditionalBoxWithConstraints(content: @Composable () -> Unit) {
 
 @Composable
 private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
-    @Suppress("UnusedReceiverParameter")
-    fun Modifier.drawSupervised() = Modifier.drawWithContent {
+    fun Modifier.drawSupervised() = drawWithContent {
         drawSeries?.addCellOperation()
         if (Configuration.cellTextDrawingEnabled.value) {
             drawContent()
@@ -255,7 +254,7 @@ private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
 }
 
 /** Consumes a value in a fashion the compiler (hopefully) would not identify as a no-op (and optimize away). */
-fun <T> sinkHole(value: T) {
+private fun <T> sinkHole(value: T) {
     require(value.toString().isNotEmpty())
 }
 
