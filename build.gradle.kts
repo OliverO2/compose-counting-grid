@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 plugins {
     kotlin("multiplatform")
     if (System.getProperty("application.useJs") == "true") {
-        id("org.jetbrains.compose") version "1.5.10"
+        id("org.jetbrains.compose") version "1.5.11"
     } else {
         id("org.jetbrains.compose") version "1.5.10-dev-wasm02"
     }
@@ -130,6 +130,9 @@ compose {
     desktop.application.mainClass = "MainKt"
     experimental {
         web.application {}
+    }
+    if (!useJs) {
+        kotlinCompilerPlugin.set("1.5.4")
     }
 }
 
