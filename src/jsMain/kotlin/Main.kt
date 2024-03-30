@@ -4,9 +4,10 @@ import org.jetbrains.skiko.wasm.onWasmReady
 
 fun main() {
     onWasmReady {
+        val title = "Compose Counting Grid on plain JS"
         @OptIn(ExperimentalComposeUiApi::class)
-        CanvasBasedWindow("Compose Counting Grid", canvasElementId = "ComposeTarget") {
-            MainScene()
+        CanvasBasedWindow(title, canvasElementId = "ComposeTarget") {
+            MainScene(title)
         }
     }
 }

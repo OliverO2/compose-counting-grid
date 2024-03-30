@@ -28,13 +28,13 @@ Unless pausing is enabled, updates will be drawn as fast as possible. The deskto
 
 #### How To Build And Run
 
-JVM desktop application: `./gradlew clean runRelease`
+JVM desktop application: `./gradlew runRelease`
 
-Js browser application: `./gradlew clean -Dapplication.useJs=true jsBrowserProductionRun` (requires some patience for bundles to load)
+Js browser application: `./gradlew -Dapplication.useJs=true jsBrowserProductionRun` (requires some patience for bundles to load)
 
-Wasm browser application: `./gradlew clean wasmJsBrowserProductionRun` (requires some patience for bundles to load)
+Wasm browser application: `./gradlew wasmJsBrowserProductionRun` (requires some patience for bundles to load)
 
-* If you'd like Wasm even faster, try aggressive optimization: `./gradlew clean -Dapplication.optimize=true wasmJsBrowserProductionRun`
+* If you'd like Wasm even faster, try aggressive optimization: `./gradlew -Dapplication.optimize=true wasmJsBrowserProductionRun`
 
 #### What To Try
 
@@ -51,6 +51,10 @@ Wasm browser application: `./gradlew clean wasmJsBrowserProductionRun` (requires
 * Compose for Web on WebAssembly is experimental, but most probably the future. It currently requires carefully selected libraries, a specific Compose plugin and some hack to bridge an implementation gap regarding Node module imports.
 
 #### Changes
+
+##### 2024-03-30
+
+* Migrated to 1.9.23, Compose 1.6.1
 
 ##### 2023-11-07
 

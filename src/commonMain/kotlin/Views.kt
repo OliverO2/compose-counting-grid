@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:function-naming")
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -40,7 +42,7 @@ import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun MainScene() {
+fun MainScene(title: String) {
     val selectedGrid = remember { mutableStateOf<GridModel?>(null) }
 
     LaunchedEffect(selectedGrid.value) {
@@ -52,11 +54,14 @@ fun MainScene() {
     }
 
     MaterialTheme {
-        ScrollView {
-            if (selectedGrid.value == null) {
-                GridChoiceScene(selectedGrid)
-            } else {
-                GridScene(selectedGrid)
+        Column {
+            Text(title, style = MaterialTheme.typography.h3)
+            ScrollView {
+                if (selectedGrid.value == null) {
+                    GridChoiceScene(selectedGrid)
+                } else {
+                    GridScene(selectedGrid)
+                }
             }
         }
     }
@@ -97,7 +102,7 @@ private fun GridScene(selectedGrid: MutableState<GridModel?>) {
     val showGrid = (
         !Configuration.gridHidingEnabled.value ||
             (animationsEnabledAfterDelay == Configuration.animationsEnabled.value)
-        )
+    )
     LaunchedEffect(Unit) {
         snapshotFlow { Configuration.animationsEnabled.value }.collect {
             delay(200.milliseconds) // Wait for a slot table update
@@ -142,26 +147,27 @@ private fun ControlsAndInfo(
 
     fun startOrStop() {
         if (gridUpdateJob == null) {
-            gridUpdateJob = gridUpdateScope.launch {
-                log("Starting")
-                startMoment = Clock.System.now()
-                try {
-                    while (isActive) {
-                        withFpsCount {
-                            grid.updateSingleCell(Configuration.updateTopRowOnlyEnabled.value)
+            gridUpdateJob =
+                gridUpdateScope.launch {
+                    log("Starting")
+                    startMoment = Clock.System.now()
+                    try {
+                        while (isActive) {
+                            withFpsCount {
+                                grid.updateSingleCell(Configuration.updateTopRowOnlyEnabled.value)
+                            }
+                            // Force recomposition by changing state on every update.
+                            if (Configuration.topLevelRecompositionForced.value) topLevelRecompositionTrigger.value++
+                            if (Configuration.rowLevelRecompositionForced.value) rowLevelRecompositionTrigger.value++
+                            if (Configuration.cellLevelRecompositionForced.value) cellLevelRecompositionTrigger.value++
+                            if (Configuration.pauseOnEachStep.value) {
+                                delay(100.milliseconds)
+                            }
                         }
-                        // Force recomposition by changing state on every update.
-                        if (Configuration.topLevelRecompositionForced.value) topLevelRecompositionTrigger.value++
-                        if (Configuration.rowLevelRecompositionForced.value) rowLevelRecompositionTrigger.value++
-                        if (Configuration.cellLevelRecompositionForced.value) cellLevelRecompositionTrigger.value++
-                        if (Configuration.pauseOnEachStep.value) {
-                            delay(100.milliseconds)
-                        }
+                    } finally {
+                        log("Stopping")
                     }
-                } finally {
-                    log("Stopping")
                 }
-            }
         } else {
             gridUpdateJob?.cancel()
             gridUpdateJob = null
@@ -223,13 +229,17 @@ private fun ConditionalBoxWithConstraints(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun Cell(cell: CellModel, cellLevelRecompositionTrigger: State<Int>) {
-    fun Modifier.drawSupervised() = drawWithContent {
-        drawSeries?.addCellOperation()
-        if (Configuration.cellTextDrawingEnabled.value) {
-            drawContent()
+private fun Cell(
+    cell: CellModel,
+    cellLevelRecompositionTrigger: State<Int>
+) {
+    fun Modifier.drawSupervised() =
+        drawWithContent {
+            drawSeries?.addCellOperation()
+            if (Configuration.cellTextDrawingEnabled.value) {
+                drawContent()
+            }
         }
-    }
 
     Box(
         Modifier.size(22.dp).recomposeHighlighter().border(1.dp, color = Color.LightGray),
@@ -259,12 +269,19 @@ private fun <T> sinkHole(value: T) {
 }
 
 @Composable
-private fun CellText(cellContent: Int, modifier: Modifier = Modifier) {
+private fun CellText(
+    cellContent: Int,
+    modifier: Modifier = Modifier
+) {
     Text(if (cellContent != 0) "$cellContent" else "", modifier = modifier, style = MaterialTheme.typography.h6)
 }
 
 @Composable
-private fun Info(grid: GridModel, startMoment: Instant?, showConfiguration: Boolean) {
+private fun Info(
+    grid: GridModel,
+    startMoment: Instant?,
+    showConfiguration: Boolean
+) {
     var secondsElapsed by remember { mutableStateOf(0L) }
 
     if (startMoment != null) {

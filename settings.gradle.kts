@@ -9,6 +9,7 @@ dependencyResolutionManagement {
             gradlePluginPortal()
             kotlinDevelopmentRepositories()
             composeDevelopmentRepositories()
+            localDevelopmentRepositories()
         }
     }
     repositories {
@@ -16,6 +17,7 @@ dependencyResolutionManagement {
         mavenCentral()
         kotlinDevelopmentRepositories()
         composeDevelopmentRepositories()
+        localDevelopmentRepositories()
     }
 }
 
@@ -24,12 +26,17 @@ fun RepositoryHandler.kotlinDevelopmentRepositories() {
     // maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
     // maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/temporary")
     // maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven")
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
+    // maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
 }
 
 fun RepositoryHandler.composeDevelopmentRepositories() {
-    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    // maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     // maven("https://androidx.dev/storage/compose-compiler/repository/")
+}
+
+fun RepositoryHandler.localDevelopmentRepositories() {
+    maven(url = "${System.getenv("HOME")!!}/.m2/local-repository")
+    mavenLocal()
 }
 
 refreshVersions {
